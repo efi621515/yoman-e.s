@@ -1,0 +1,274 @@
+/* 
+ * print-styles.css
+ * סגנונות מיוחדים להדפסה
+ */
+
+/* הסתרת הלוגו בזמן תצוגה רגילה */
+.print-logo {
+    display: none;
+}
+
+/* הגדרות בסיסיות לתצוגת הדפסה */
+@media print {
+    /* הצגת הלוגו בזמן הדפסה */
+    .print-logo {
+        display: block;
+        text-align: center;
+        margin-bottom: 10mm;
+    }
+    
+    .print-logo img {
+        max-height: 30mm;
+        max-width: 80%;
+    }
+    
+    /* הגדרות עמוד - שוליים מתאימים לכל העמודים */
+    @page {
+        size: A4 portrait;
+        margin: 15mm 10mm 15mm 10mm;
+    }
+    
+    /* הגדרת כותרת עליונה בכל עמוד */
+    .print-header {
+        position: running(header);
+        text-align: center;
+        margin-bottom: 5mm;
+        padding-bottom: 3mm;
+        border-bottom: 1px solid #ccc;
+    }
+    
+    /* הצגת הכותרת העליונה בכל עמוד */
+    @page {
+        @top-center {
+            content: element(header);
+        }
+    }
+    
+    /* התאמות ספציפיות למסמכים מודפסים */
+    .print-section, #quote-preview {
+        margin-top: 5mm;
+    }
+    
+    /* הוספת פרטי חברה בכותרת תחתונה */
+    .print-footer {
+        position: running(footer);
+        text-align: center;
+        font-size: 9pt;
+        color: #666;
+        padding-top: 3mm;
+        margin-top: 5mm;
+        border-top: 1px solid #eee;
+    }
+    
+    @page {
+        @bottom-center {
+            content: element(footer);
+        }
+    }
+    
+    /* הסתרת אלמנטים שלא צריכים להיות בהדפסה */
+    .no-print, button, .tabs, .actions, .action-buttons,
+    .search-container, .form-container, input[type="file"],
+    .file-indicator-text, .small-btn, .edit-btn, .delete-btn, 
+    .print-btn, .info-btn, .modal, .font-size-controls {
+        display: none !important;
+    }
+    
+    /* התאמות כלליות לתצוגת הדפסה */
+    body, html {
+        width: 100%;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        background-color: white;
+        font-size: 12pt;
+        line-height: 1.3;
+        color: black;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border: none;
+    }
+    
+    /* הגדרות טיפוגרפיה להדפסה */
+    h1, h2, h3, h4 {
+        page-break-after: avoid;
+        margin-top: 10mm;
+        color: black;
+    }
+    
+    h1 {
+        font-size: 18pt;
+        margin-bottom: 15mm;
+    }
+    
+    h2 {
+        font-size: 16pt;
+    }
+    
+    h3 {
+        font-size: 14pt;
+    }
+    
+    /* מניעת שבירת שורה באלמנטים חשובים */
+    h1, h2, h3, h4, th {
+        page-break-after: avoid;
+    }
+    
+    .client-section, .print-content, .summary-box {
+        page-break-inside: avoid;
+    }
+    
+    /* עיצוב תוכן המסמך */
+    .print-content {
+        page-break-before: auto;
+        page-break-after: auto;
+        margin-bottom: 15mm;
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 10px;
+        padding: 0 5mm;
+    }
+    
+    /* עוצרים שבירה בתוך תא טבלה */
+    td, th {
+        page-break-inside: avoid;
+    }
+    
+    /* טבלאות בהדפסה */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10mm 0;
+        page-break-inside: auto;
+    }
+    
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    thead {
+        display: table-header-group;
+    }
+    
+    tfoot {
+        display: table-footer-group;
+    }
+    
+    th, td {
+        padding: 2mm !important;
+        border: 1px solid #333;
+        text-align: right;
+    }
+    
+    th {
+        background-color: #eee !important;
+        color: black !important;
+        font-weight: bold;
+    }
+    
+    tr:nth-child(even) {
+        background-color: #f9f9f9 !important;
+    }
+    
+    /* עיצוב מיוחד להצעת מחיר */
+    #quote-preview {
+        display: block !important;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 5mm;
+    }
+    
+    #quote-preview .print-content {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 10px;
+        padding: 0 15mm;
+    }
+    
+    #quote-preview .print-label {
+        font-weight: bold;
+        color: #333;
+    }
+    
+    /* עיצוב מיוחד לדוחות */
+    #report-result {
+        display: block !important;
+        width: 100%;
+    }
+    
+    #report-result .summary-box {
+        border: 1px solid #ccc;
+        padding: 5mm;
+        margin-bottom: 5mm;
+        page-break-inside: avoid;
+    }
+    
+    /* תוכן שמתפרש על פני כמה עמודים */
+    .page-break-before {
+        page-break-before: always;
+    }
+    
+    /* סיכומים ותוצאות בסוף הדוח */
+    .report-summary {
+        margin-top: 10mm;
+        padding-top: 5mm;
+        border-top: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+    
+    /* תיקון עבור מדפסות שלא תומכות ב-running elements */
+    .print-header-static {
+        display: block;
+        text-align: center;
+        margin-bottom: 10mm;
+        padding-bottom: 3mm;
+        border-bottom: 1px solid #ccc;
+    }
+    
+    .print-footer-static {
+        display: block;
+        text-align: center;
+        margin-top: 10mm;
+        padding-top: 3mm;
+        border-top: 1px solid #ccc;
+        font-size: 9pt;
+        color: #666;
+    }
+    
+    /* וידוא שרק תוכן לשונית פעילה נראה בהדפסה */
+    .tab-content {
+        display: none !important;
+    }
+    
+    .tab-content.active {
+        display: block !important;
+    }
+    
+    /* התאמת תצוגת הדפסה לתעודות משלוח */
+    .delivery-note-print {
+        direction: rtl;
+        font-family: Arial, sans-serif;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* ודא כי כל הטקסט שחור להדפסה מיטבית */
+    body, p, div, span, table, tr, td, th {
+        color: black;
+    }
+    
+    /* מניעת שבירת תוכן בקישורים */
+    a {
+        text-decoration: none;
+        color: black;
+    }
+}

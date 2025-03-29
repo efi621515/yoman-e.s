@@ -1,0 +1,310 @@
+/* סגנונות מותאמים לניידים - גרסה משופרת */
+
+/* הגדרות כלליות */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px;
+        padding: 8px;
+        margin: 0;
+    }
+    
+    .container {
+        padding: 10px;
+        margin: 0;
+        max-width: 100%;
+        box-shadow: none;
+    }
+    
+    h1 {
+        font-size: 20px;
+    }
+    
+    h2 {
+        font-size: 18px;
+    }
+    
+    h3 {
+        font-size: 16px;
+    }
+    
+    /* התאמות תפריט וכפתורי ניווט */
+    .tabs {
+        flex-direction: column;
+        padding: 5px;
+    }
+    
+    .tab {
+        width: 100%;
+        margin-bottom: 3px;
+        padding: 8px 10px;
+        font-size: 14px;
+        text-align: center;
+    }
+    
+    /* התאמת טפסים לתצוגה מובייל */
+    .form-container {
+        padding: 12px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .form-group {
+        margin-bottom: 12px;
+    }
+    
+    .form-group.half {
+        width: 100%;
+    }
+    
+    input, textarea, select {
+        font-size: 16px; /* גודל פונט אופטימלי למובייל למניעת זום אוטומטי */
+        padding: 10px;
+    }
+    
+    button {
+        padding: 10px 12px;
+        width: 100%;
+        margin-bottom: 8px;
+        font-size: 16px;
+    }
+    
+    /* התאמת טבלאות למובייל */
+    table {
+        font-size: 12px;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    th, td {
+        padding: 6px 8px;
+    }
+    
+    /* סרגל החיפוש */
+    .search-container {
+        padding: 10px;
+    }
+    
+    .filter-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .filter-row .form-group {
+        width: 100%;
+    }
+    
+    /* מודאלים */
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 15px;
+    }
+    
+    /* כפתורי פעולה */
+    .actions {
+        flex-wrap: wrap;
+    }
+    
+    .actions button {
+        margin-bottom: 5px;
+    }
+    
+    /* תצוגת לוח שנה */
+    .calendar-layout {
+        flex-direction: column;
+    }
+    
+    .calendar-sidebar {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .calendar-container {
+        height: 500px;
+    }
+    
+    .calendar-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .calendar-controls {
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    
+    /* פריסת תזכורות */
+    .reminder-layout {
+        flex-direction: column;
+    }
+    
+    .reminder-sidebar {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .reminder-calendar {
+        height: 500px;
+    }
+    
+    /* התאמות משופרות להצגת טבלאות במובייל */
+    .responsive-table {
+        width: 100%;
+        border: 0;
+        display: block;
+    }
+    
+    .responsive-table thead {
+        display: none;
+    }
+    
+    .responsive-table tr {
+        margin-bottom: 15px;
+        display: block;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .responsive-table td {
+        display: block;
+        text-align: right;
+        padding: 10px;
+        position: relative;
+        border: none;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .responsive-table td:last-child {
+        border-bottom: 0;
+    }
+    
+    .responsive-table td:before {
+        content: attr(data-label);
+        float: right;
+        font-weight: bold;
+        margin-left: 10px;
+    }
+    
+    /* כפתורי שינוי גודל גופן */
+    .font-size-controls {
+        top: auto;
+        bottom: 10px;
+        left: 10px;
+        padding: 5px;
+    }
+    
+    .font-btn {
+        padding: 6px 10px;
+    }
+    
+    /* התאמות לניהול לוגואים */
+    .logo-preview img {
+        max-width: 100%;
+    }
+    
+    /* התאמת תצוגת פרטי כרטיסיות */
+    .client-info, 
+    .location-details-grid, 
+    .event-details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* מגירת ניווט צפה */
+    .mobile-nav-menu {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid #ddd;
+        display: flex;
+        overflow-x: auto;
+        z-index: 100;
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .mobile-nav-item {
+        flex: 1;
+        text-align: center;
+        padding: 8px 5px;
+        font-size: 12px;
+        color: #555;
+        min-width: 60px;
+    }
+    
+    .mobile-nav-item.active {
+        color: #4CAF50;
+        border-top: 2px solid #4CAF50;
+    }
+    
+    .mobile-nav-icon {
+        display: block;
+        font-size: 18px;
+        margin-bottom: 2px;
+    }
+    
+    /* מרווח תחתון קבוע למניעת הסתרה ע"י התפריט */
+    body {
+        padding-bottom: 60px;
+    }
+    
+    /* תפריט מובייל עם אקורדיון */
+    .mobile-menu-toggle {
+        display: block;
+        width: 100%;
+        background: #4CAF50;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    
+    .mobile-tabs-container {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+    
+    .mobile-tabs-container.open {
+        max-height: 500px;
+    }
+}
+
+/* תיקון ספציפי עבור טלפונים קטנים */
+@media (max-width: 480px) {
+    body {
+        font-size: 13px;
+        padding: 5px;
+    }
+    
+    .container {
+        padding: 8px;
+    }
+    
+    h1 {
+        font-size: 18px;
+    }
+    
+    h2 {
+        font-size: 16px;
+    }
+    
+    .actions {
+        flex-direction: column;
+    }
+    
+    .actions button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .equipment-type-options {
+        flex-direction: column;
+    }
+}

@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>יומן עבודה ומערכת הצעות מחיר</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- קובץ סגנונות חדש להדפסה -->
+    <link rel="stylesheet" href="css/print-styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
+    <!-- הוספת PapaParse לטיפול ב-CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <!-- בתוך תגית ה-head, לפני סגירת </head> -->
+<!-- ספריה ליצירת PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<!-- ספריה ליצירת XLSX (אקסל) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="css/mobile-styles.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#4CAF50">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/png" sizes="192x192" href="images/app-icon-192.png">
+<link rel="apple-touch-icon" href="images/app-icon-192.png">
+</head>
+<body>
+     <!-- פס ירוק עליון -->
+     <div class="top-green-bar"></div>
+
+     <!-- כפתורי שינוי גודל גופן -->
+     <div class="font-size-controls">
+         <button class="font-btn" onclick="changeFontSize(-1)">א-</button>
+         <span id="current-font-size">16.0</span>
+         <button class="font-btn" onclick="changeFontSize(1)">א+</button>
+     </div>
+ 
+     <div class="container">
+         <h1>יומן עבודה ומערכת הצעות מחיר</h1>
+ 
+         <!-- תפריט ניווט - עם תוספת תזכורות -->
+         <div class="tabs">
+             <div class="tab active" onclick="showTab('daily-log')">רישום עבודה יומי</div>
+             <div class="tab" onclick="showTab('quotes')">הצעות מחיר</div>
+             <div class="tab" onclick="showTab('delivery-notes')">תעודות משלוח</div>
+             <div class="tab" onclick="showTab('clients')">לקוחות</div>
+             <div class="tab" onclick="showTab('tools')">כלי עבודה</div>
+             <div class="tab" onclick="showTab('operators')">מפעילים</div>
+             <div class="tab" onclick="showTab('locations')">מקומות עבודה</div>
+             <div class="tab" onclick="showTab('maintenance')">תחזוקה</div>
+             <div class="tab" onclick="showTab('reports')">דוחות</div>
+             <div class="tab" onclick="showTab('reminders')">תזכורות</div>
+             <div class="tab" onclick="showTab('calendar')">לוח שנה</div>
+             <div class="tab" onclick="showTab('data-management')">ניהול נתונים</div>
+         </div>
+           <!-- תוכן לשונית תזכורות -->
+        <div id="reminders" class="tab-content">
+            <h2>יומן תזכורות</h2>
+            
+            <div class="reminder-layout">
+                <div class="reminder-sidebar">
+                    <div class="form-container" id="reminder-form">
+                        <h3>תזכורת חדשה</h3>
+                        <input type="hidden" id="reminder-id">
+                        
+                        <div class="form-group">
+                            <label for="reminder-date">תאריך:</label>
+                            <input type="date" id="reminder-date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reminder-time">שעה (אופציונלי):</label>
+                            <input type="time" id="reminder-time">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reminder-title">כותרת:</label>
+                            <input type="text" id="reminder-title" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reminder-description">תיאור:</label>
+                            <textarea id="reminder-description"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reminder-priority">עדיפות:</label>
+                            <select id="reminder-priority">
+                                <option value="high">גבוהה</option>
+                                <option value="normal" selected>רגילה</option>
+                                <option value="low">נמוכה</option>
+                            </select>
+                        </div>
+                        
+                        <button type="button" id="add-reminder-btn" onclick="addReminder()">הוסף תזכורת</button>
+                    </div>
+                    
+                    <div class="search-container">
+                        <h3>תזכורות שלי</h3>
+                        <div class="form-group">
+                            <label for="reminder-filter">סינון תזכורות:</label>
+                            <select id="reminder-filter" onchange="filterReminders()">
+                                <option value="all">הכל</option>
+                                <option value="upcoming">עתידיות</option>
+                                <option value="past">קודמות</option>
+                                <option value="today">היום</option>
+                                <option value="high">עדיפות גבוהה</option>
+                                <option value="notcompleted">לא הושלמו</option>
+                                <option value="completed">הושלמו</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="reminders-list" class="reminders-list">
+                        <!-- התזכורות יוצגו כאן -->
+                    </div>
+                </div>
+                
+                <div class="reminder-content">
+                    <div id="reminder-calendar" class="reminder-calendar">
+                        <!-- לוח השנה לתזכורות יוצג כאן -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- תוכן לשונית ניהול נתונים - מתוקן -->
+        <div id="data-management" class="tab-content">
+            <h2>ניהול נתונים</h2>
+            
+            <div class="section-container">
+                <div class="section">
+                    <h3>ייצוא נתונים</h3>
+                
+                    <div class="form-group">
+                        <label for="export-type">סוג נתונים לייצוא:</label>
+                        <select id="export-type">
+                            <option value="work-logs">רישום עבודה יומי</option>
+                            <option value="quotes">הצעות מחיר</option>
+                            <option value="reminders">תזכורות</option>
+                            <option value="tools">כלי עבודה</option>
+                            <option value="clients">לקוחות</option>
+                        </select>
+                    </div>
+                
+                    <div class="form-group">
+                        <label for="export-format">פורמט ייצוא:</label>
+                        <select id="export-format">
+                            <option value="csv">CSV (אקסל בסיסי)</option>
+                            <option value="xlsx">XLSX (אקסל מלא)</option>
+                            <option value="pdf">PDF</option>
+                            <option value="json">JSON</option>
+                        </select>
+                    </div>
+                
+                    <button onclick="exportData()">ייצא נתונים</button>
+                </div>
+                
+                <div class="section">
+                    <h3>ייבוא נתונים מאקסל</h3>
+    
+                    <div class="form-group">
+                        <label for="import-type">סוג נתונים לייבוא:</label>
+                        <select id="import-type">
+                            <option value="work-logs">רישום עבודה יומי</option>
+                            <option value="quotes">הצעות מחיר</option>
+                        </select>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="import-action">פעולת ייבוא:</label>
+                        <select id="import-action">
+                            <option value="merge">מזג עם נתונים קיימים</option>
+                            <option value="replace">החלף נתונים קיימים</option>
+                        </select>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="import-file">בחר קובץ אקסל (CSV):</label>
+                        <input type="file" id="import-file" accept=".csv">
+                    </div>
+                    
+                    <div class="form-group">
+                        <p class="small-text">הערה: הקובץ צריך להיות בפורמט CSV. וודא שהקובץ כולל את הכותרות הנדרשות (למשל: תאריך, לקוח, מקום עבודה, כלי עבודה, מחיר ליום וכו').</p>
+                    </div>
+    
+                    <button onclick="importDataFromExcel()">ייבא מאקסל</button>
+                </div>
+            </div>
+    
+            <div class="section data-management-only">
+                <h3>גיבוי ושחזור נתונים</h3>
+        
+                <div class="form-group">
+                    <button onclick="backupAllData()">גיבוי כל הנתונים</button>
+                    <p class="small-text">שומר את כל הנתונים לקובץ JSON להורדה</p>
+                </div>
+        
+                <div class="form-group">
+                    <label for="restore-file">שחזור נתונים מגיבוי:</label>
+                    <input type="file" id="restore-file" accept=".json">
+                </div>
+        
+                <button onclick="restoreAllData()">שחזר נתונים</button>
+            </div>
+            
+            <!-- ניהול לוגואים חדש -->
+            <div class="section data-management-only">
+                <h3>ניהול לוגואים</h3>
+                
+                <div class="form-group">
+                    <label for="logo-type">סוג לוגו:</label>
+                    <select id="logo-type">
+                        <option value="default">לוגו ברירת מחדל</option>
+                        <option value="quote">לוגו להצעות מחיר</option>
+                        <option value="report">לוגו לדוחות</option>
+                        <option value="invoice">לוגו לחשבוניות</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="logo-file">בחר קובץ לוגו:</label>
+                    <input type="file" id="logo-file" accept="image/png,image/jpeg,image/svg+xml">
+                    <p class="small-text">פורמטים מומלצים: PNG או SVG עם רקע שקוף</p>
+                </div>
+                
+                <div class="logo-preview">
+                    <p>תצוגה מקדימה:</p>
+                    <img id="logo-preview-img" src="images/logos/logo-default.png" alt="תצוגה מקדימה של הלוגו" style="max-height: 100px;">
+                </div>
+                
+                <button onclick="uploadLogo()">העלה לוגו</button>
+            </div>
+        </div>
+
+        <!-- תוכן לשונית רישום עבודה יומי -->
+        <div id="daily-log" class="tab-content active">
+            <h2>רישום עבודה יומי</h2>
+
+            <div class="form-container">
+                <h3 id="log-form-title">יצירת רישום עבודה חדש</h3>
+                <form id="log-form">
+                    <input type="hidden" id="log-id">
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="log-date">תאריך:</label>
+                            <input type="date" id="log-date" required>
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="log-client">לקוח:</label>
+                            <select id="log-client" class="client-dropdown" required>
+                                <option value="">בחר לקוח</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="log-location">מקום העבודה:</label>
+                            <select id="log-location" class="location-dropdown">
+                                <option value="">בחר מקום עבודה</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="log-tools">כלי עבודה:</label>
+                            <select id="log-tools" class="tool-dropdown">
+                                <option value="">בחר כלי עבודה</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="log-operator">מפעיל:</label>
+                            <select id="log-operator" class="operator-dropdown">
+                                <option value="">בחר מפעיל</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="log-daily-price">מחיר ליום עבודה:</label>
+                            <input type="number" id="log-daily-price" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="log-transportation">הובלה:</label>
+                            <select id="log-transportation">
+                                <option value="כן">כן</option>
+                                <option value="לא">לא</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="log-transportation-cost">מחיר הובלה:</label>
+                            <input type="number" id="log-transportation-cost" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="log-notes">הערות:</label>
+                        <textarea id="log-notes"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="log-field-image">תמונה מהשטח:</label>
+                        <input type="file" id="log-field-image" accept="image/*">
+                        <div id="field-image-indicator" class="file-indicator-text">אין תמונה</div>
+                    </div>
+
+                    <button type="button" id="log-submit-btn" onclick="saveWorkLog()">שמור רישום עבודה</button>
+                </form>
+            </div>
+
+            <div class="search-container">
+                <h3>חיפוש רישומי עבודה</h3>
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label for="search-client">לקוח:</label>
+                        <select id="search-client" class="client-dropdown">
+                            <option value="">כל הלקוחות</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="search-date-from">מתאריך:</label>
+                        <input type="date" id="search-date-from">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="search-date-to">עד תאריך:</label>
+                        <input type="date" id="search-date-to">
+                    </div>
+
+                    <div class="form-group">
+                        <button onclick="searchWorkLogs()">חפש</button>
+                    </div>
+                </div>
+            </div>
+
+            <table id="work-logs-table">
+                <thead>
+                    <tr>
+                        <th>תאריך</th>
+                        <th>לקוח</th>
+                        <th>מקום עבודה</th>
+                        <th>כלי עבודה</th>
+                        <th>מפעיל</th>
+                        <th>מחיר ליום</th>
+                        <th>הובלה</th>
+                        <th>מחיר הובלה</th>
+                        <th>פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="work-logs-body">
+                    <!-- רישומי עבודה יוצגו כאן -->
+                </tbody>
+            </table>
+        </div>
+        <!-- תוכן לשונית הצעות מחיר -->
+        <div id="quotes" class="tab-content">
+            <h2>הצעות מחיר</h2>
+
+            <div class="form-container">
+                <form id="quote-form">
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="quote-date">תאריך:</label>
+                            <input type="date" id="quote-date" required>
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="quote-client">לקוח:</label>
+                            <select id="quote-client" class="client-dropdown" required>
+                                <option value="">בחר לקוח</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="quote-tools">כלי עבודה:</label>
+                            <select id="quote-tools" class="tool-dropdown">
+                                <option value="">בחר כלי עבודה</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="quote-daily-price">מחיר ליום:</label>
+                            <input type="number" id="quote-daily-price" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="quote-location">מקום העבודה:</label>
+                            <select id="quote-location" class="location-dropdown">
+                                <option value="">בחר מקום עבודה</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="quote-operator">מפעיל:</label>
+                            <select id="quote-operator" class="operator-dropdown">
+                                <option value="">בחר מפעיל</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="quote-transportation">הובלה:</label>
+                            <select id="quote-transportation">
+                                <option value="כן">כן</option>
+                                <option value="לא">לא</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="quote-transportation-cost">מחיר הובלה:</label>
+                            <input type="number" id="quote-transportation-cost" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quote-notes">הערות:</label>
+                        <textarea id="quote-notes"></textarea>
+                    </div>
+
+                    <button type="button" onclick="saveQuote()">שמור הצעת מחיר</button>
+                </form>
+            </div>
+
+            <div class="search-container">
+                <h3>הצעות מחיר</h3>
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label for="search-quote-client">לקוח:</label>
+                        <select id="search-quote-client" class="client-dropdown">
+                            <option value="">כל הלקוחות</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="search-quote-date-from">מתאריך:</label>
+                        <input type="date" id="search-quote-date-from">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="search-quote-date-to">עד תאריך:</label>
+                        <input type="date" id="search-quote-date-to">
+                    </div>
+
+                    <div class="form-group">
+                        <button onclick="searchQuotes()">חפש</button>
+                    </div>
+                </div>
+            </div>
+
+            <table id="quotes-table">
+                <thead>
+                    <tr>
+                        <th>תאריך</th>
+                        <th>לקוח</th>
+                        <th>כלי עבודה</th>
+                        <th>מחיר ליום</th>
+                        <th>מקום עבודה</th>
+                        <th>מפעיל</th>
+                        <th>הובלה</th>
+                        <th>מחיר הובלה</th>
+                        <th>פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="quotes-body">
+                    <!-- הצעות מחיר יוצגו כאן -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- תוכן לשונית תעודות משלוח -->
+        <div id="delivery-notes" class="tab-content">
+            <h2>ניהול תעודות משלוח</h2>
+
+            <div class="form-container">
+                <h3 id="delivery-form-title">יצירת תעודת משלוח חדשה</h3>
+                <form id="delivery-form">
+                    <input type="hidden" id="delivery-id">
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="delivery-number">מספר תעודה:</label>
+                            <input type="text" id="delivery-number" placeholder="יתמלא אוטומטית">
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="delivery-date">תאריך:</label>
+                            <input type="date" id="delivery-date" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="delivery-time">שעה:</label>
+                            <input type="time" id="delivery-time">
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="delivery-client">לקוח:</label>
+                            <select id="delivery-client" class="client-dropdown" required>
+                                <option value="">בחר לקוח</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="delivery-license">מס' רישוי:</label>
+                            <input type="text" id="delivery-license">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>ציוד:</label>
+                        <div class="equipment-type-options">
+                            <label class="radio-label">
+                                <input type="radio" name="equipment-type" value="משאית" checked> משאית
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="equipment-type" value="גרר גלגלים"> גרר גלגלים
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="equipment-type" value="כף זחל"> כף זחל
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="equipment-type" value="שופל"> שופל
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="equipment-type" value="בובקט"> בובקט
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="equipment-type" value="מכבש"> מכבש
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="equipment-type" value="מיני מחפרון"> מיני מחפרון
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="delivery-location">ממקום:</label>
+                            <select id="delivery-location" class="location-dropdown">
+                                <option value="">בחר מקום</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="delivery-destination">למקום:</label>
+                            <input type="text" id="delivery-destination">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <h4>פרטי המשלוח</h4>
+                        <table id="delivery-items-table" class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>מספר</th>
+                                    <th>פרטים</th>
+                                    <th>כמות</th>
+                                    <th>מחיר</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- שורות יתווספו דינמית -->
+                            </tbody>
+                        </table>
+                        <button type="button" id="add-item-btn" class="small-btn">הוסף שורה</button>
+                    </div>
+
+                    <button type="button" id="save-delivery-btn" onclick="saveDeliveryNote()">שמור תעודת משלוח</button>
+                </form>
+            </div>
+
+            <div class="search-container">
+                <h3>חיפוש תעודות משלוח</h3>
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label for="search-delivery-client">לקוח:</label>
+                        <select id="search-delivery-client" class="client-dropdown">
+                            <option value="">כל הלקוחות</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="search-delivery-date-from">מתאריך:</label>
+                        <input type="date" id="search-delivery-date-from">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="search-delivery-date-to">עד תאריך:</label>
+                        <input type="date" id="search-delivery-date-to">
+                    </div>
+
+                    <div class="form-group">
+                        <button onclick="searchDeliveryNotes()">חפש</button>
+                    </div>
+                </div>
+            </div>
+
+            <table id="delivery-notes-table">
+                <thead>
+                    <tr>
+                        <th>מספר תעודה</th>
+                        <th>תאריך</th>
+                        <th>לקוח</th>
+                        <th>ממקום</th>
+                        <th>למקום</th>
+                        <th>פעולות</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- תעודות משלוח יוצגו כאן -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- תוכן לשונית לקוחות -->
+        <div id="clients" class="tab-content">
+            <h2>ניהול לקוחות</h2>
+
+            <div class="form-container">
+                <form id="client-form">
+                    <input type="hidden" id="client-id">
+                    <div class="form-group">
+                        <label for="client-name">שם לקוח:</label>
+                        <input type="text" id="client-name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="client-phone">טלפון:</label>
+                        <input type="tel" id="client-phone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="client-email">דוא"ל:</label>
+                        <input type="email" id="client-email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="client-address">כתובת:</label>
+                        <input type="text" id="client-address">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="client-notes">הערות:</label>
+                        <textarea id="client-notes"></textarea>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" id="save-client-btn" onclick="saveClient()">שמור לקוח</button>
+                        <button type="button" onclick="clearClientForm()">נקה טופס</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="search-container">
+                <h3>לקוחות</h3>
+                <div class="form-group">
+                    <label for="search-client-text">חיפוש לקוח:</label>
+                    <input type="text" id="search-client-text" placeholder="הזן שם, טלפון או כתובת לחיפוש" oninput="searchClients()">
+                </div>
+            </div>
+
+            <table id="clients-table">
+                <thead>
+                    <tr>
+                        <th>שם לקוח</th>
+                        <th>טלפון</th>
+                        <th>דוא"ל</th>
+                        <th>כתובת</th>
+                        <th>פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="clients-body">
+                    <!-- לקוחות יוצגו כאן -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- תוכן לשונית כלי עבודה -->
+        <div id="tools" class="tab-content">
+            <h2>ניהול כלי עבודה</h2>
+    
+            <div class="form-container">
+                <form id="tool-form">
+                    <input type="hidden" id="tool-id">
+    
+                    <div class="form-group">
+                        <label for="tool-name">שם כלי עבודה:</label>
+                        <input type="text" id="tool-name" required>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="tool-type">סוג:</label>
+                        <input type="text" id="tool-type">
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="tool-serial-number">מספר סידורי:</label>
+                        <input type="text" id="tool-serial-number">
+                    </div>
+    
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="tool-purchase-date">תאריך רכישה:</label>
+                            <input type="date" id="tool-purchase-date">
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="tool-purchase-price">מחיר רכישה:</label>
+                            <input type="number" id="tool-purchase-price" min="0">
+                        </div>
+                    </div>
+    
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="tool-status">סטטוס:</label>
+                            <select id="tool-status">
+                                <option value="זמין">זמין</option>
+                                <option value="בשימוש">בשימוש</option>
+                                <option value="בתחזוקה">בתחזוקה</option>
+                                <option value="לא זמין">לא זמין</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group half">
+                            <label for="tool-location">מיקום נוכחי:</label>
+                            <input type="text" id="tool-location">
+                        </div>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="tool-next-maintenance">תאריך טיפול הבא:</label>
+                        <input type="date" id="tool-next-maintenance">
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="tool-insurance-number">מספר ביטוח:</label>
+                        <input type="text" id="tool-insurance-number">
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="tool-insurance-company">חברת ביטוח:</label>
+                        <input type="text" id="tool-insurance-company">
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="tool-insurance-expiry">תאריך תפוגת ביטוח:</label>
+                        <input type="date" id="tool-insurance-expiry">
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="tool-insurance-file">מסמך ביטוח:</label>
+                        <input type="file" id="tool-insurance-file" accept="image/*,application/pdf">
+                        <div id="insurance-file-indicator" class="file-indicator-text">אין קובץ</div>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="tool-license-file">מסמך רשיון:</label>
+                        <input type="file" id="tool-license-file" accept="image/*,application/pdf">
+                        <div id="license-file-indicator" class="file-indicator-text">אין קובץ</div>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="tool-notes">הערות:</label>
+                        <textarea id="tool-notes"></textarea>
+                    </div>
+    
+                    <div class="button-group">
+                        <button type="button" id="save-tool-btn" onclick="saveTool()">שמור כלי עבודה</button>
+                        <button type="button" onclick="clearToolForm()">נקה טופס</button>
+                    </div>
+                </form>
+            </div>
+    
+            <div class="search-container">
+                <h3>רשימת כלי עבודה <span id="maintenance-alerts-badge" class="alert-badge">0</span></h3>
+    
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label for="tool-filter">סנן לפי סטטוס:</label>
+                        <select id="tool-filter" onchange="filterTools()">
+                            <option value="all">הכל</option>
+                            <option value="זמין">זמין</option>
+                            <option value="בשימוש">בשימוש</option>
+                            <option value="בתחזוקה">בתחזוקה</option>
+                            <option value="לא זמין">לא זמין</option>
+                        </select>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="search-tool-text">חיפוש כלי עבודה:</label>
+                        <input type="text" id="search-tool-text" placeholder="הזן שם, סוג או מיקום לחיפוש" oninput="searchTools()">
+                    </div>
+                </div>
+            </div>
+    
+            <table id="tools-table">
+                <thead>
+                    <tr>
+                        <th>שם כלי</th>
+                        <th>סוג</th>
+                        <th>סטטוס</th>
+                        <th>מיקום נוכחי</th>
+                        <th>תאריך רכישה</th>
+                        <th>טיפול הבא</th>
+                        <th>פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="tools-body">
+                    <!-- כלי עבודה יוצגו כאן -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- תוכן לשונית מפעילים -->
+        <div id="operators" class="tab-content">
+            <h2>ניהול מפעילים</h2>
+
+            <div class="form-container">
+                <form id="operator-form">
+                    <input type="hidden" id="operator-id">
+
+                    <div class="form-group">
+                        <label for="operator-name">שם מפעיל:</label>
+                        <input type="text" id="operator-name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="operator-phone">טלפון:</label>
+                        <input type="tel" id="operator-phone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="operator-email">דוא"ל:</label>
+                        <input type="email" id="operator-email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="operator-address">כתובת:</label>
+                        <input type="text" id="operator-address">
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="operator-license">מספר רשיון:</label>
+                        <input type="text" id="operator-license">
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="operator-id-file">צילום ת.ז:</label>
+                        <input type="file" id="operator-id-file" accept="image/*,application/pdf">
+                        <div id="id-file-indicator" class="file-indicator-text">אין קובץ</div>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="operator-license-file">צילום רשיון:</label>
+                        <input type="file" id="operator-license-file" accept="image/*,application/pdf">
+                        <div id="license-file-indicator" class="file-indicator-text">אין קובץ</div>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="operator-notes">הערות:</label>
+                        <textarea id="operator-notes"></textarea>
+                    </div>
+    
+                    <div class="button-group">
+                        <button type="button" id="save-operator-btn" onclick="saveOperator()">שמור מפעיל</button>
+                        <button type="button" onclick="clearOperatorForm()">נקה טופס</button>
+                    </div>
+                </form>
+            </div>
+    
+            <div class="search-container">
+                <h3>מפעילים</h3>
+                <div class="form-group">
+                    <label for="search-operator-text">חיפוש מפעיל:</label>
+                    <input type="text" id="search-operator-text" placeholder="הזן שם, טלפון או מספר רשיון לחיפוש" oninput="searchOperators()">
+                </div>
+            </div>
+    
+            <table id="operators-table">
+                <thead>
+                    <tr>
+                        <th>שם מפעיל</th>
+                        <th>טלפון</th>
+                        <th>דוא"ל</th>
+                        <th>מספר רשיון</th>
+                        <th>ת.ז</th>
+                        <th>רשיון</th>
+                        <th>פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="operators-body">
+                    <!-- מפעילים יוצגו כאן -->
+                </tbody>
+            </table>
+        </div>
+    
+        <!-- תוכן לשונית מקומות עבודה -->
+        <div id="locations" class="tab-content">
+            <h2>ניהול מקומות עבודה</h2>
+    
+            <div class="form-container">
+                <form id="location-form">
+                    <input type="hidden" id="location-id">
+    
+                    <div class="form-group">
+                        <label for="location-name">שם מקום עבודה:</label>
+                        <input type="text" id="location-name" required>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="location-city">עיר:</label>
+                        <input type="text" id="location-city">
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="location-address">כתובת מדויקת:</label>
+                        <input type="text" id="location-address">
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="location-contact">איש קשר:</label>
+                        <input type="text" id="location-contact">
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="location-contact-phone">טלפון איש קשר:</label>
+                        <input type="text" id="location-contact-phone">
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="location-image-file">תמונה של המקום:</label>
+                        <input type="file" id="location-image-file" accept="image/*">
+                        <div id="image-file-indicator" class="file-indicator-text">אין תמונה</div>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="location-notes">הערות:</label>
+                        <textarea id="location-notes"></textarea>
+                    </div>
+    
+                    <div class="button-group">
+                        <button type="button" id="save-location-btn" onclick="saveLocation()">שמור מקום עבודה</button>
+                        <button type="button" onclick="clearLocationForm()">נקה טופס</button>
+                    </div>
+                </form>
+            </div>
+    
+            <div class="search-container">
+                <h3>מקומות עבודה</h3>
+                <div class="form-group">
+                    <label for="search-location-text">חיפוש מקום עבודה:</label>
+                    <input type="text" id="search-location-text" placeholder="הזן שם, עיר או כתובת לחיפוש" oninput="searchLocations()">
+                </div>
+            </div>
+    
+            <table id="locations-table">
+                <thead>
+                    <tr>
+                        <th>שם מקום</th>
+                        <th>עיר</th>
+                        <th>כתובת</th>
+                        <th>איש קשר</th>
+                        <th>תמונה</th>
+                        <th>פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="locations-body">
+                    <!-- מקומות עבודה יוצגו כאן -->
+                </tbody>
+            </table>
+        </div>
+    
+        <!-- תוכן לשונית תחזוקה -->
+        <div id="maintenance" class="tab-content">
+            <h2>ניהול תחזוקה</h2>
+    
+            <div class="section-container">
+                <div class="section">
+                    <h3>טיפולים קרובים</h3>
+                    <div id="upcoming-maintenance"></div>
+                </div>
+    
+                <div class="section">
+                    <h3>סטטיסטיקה תחזוקה</h3>
+                    <div id="maintenance-stats"></div>
+                </div>
+            </div>
+    
+            <h3>היסטוריית תחזוקה</h3>
+            <div class="filter-row">
+                <div class="form-group">
+                    <label for="maintenance-filter">סנן לפי כלי:</label>
+                    <select id="maintenance-filter" class="tool-filter-all" onchange="filterMaintenanceHistory()">
+                        <option value="all">כל הכלים</option>
+                    </select>
+                </div>
+    
+                <div class="form-group">
+                    <label for="maintenance-date-from">מתאריך:</label>
+                    <input type="date" id="maintenance-date-from" onchange="filterMaintenanceHistory()">
+                </div>
+    
+                <div class="form-group">
+                    <label for="maintenance-date-to">עד תאריך:</label>
+                    <input type="date" id="maintenance-date-to" onchange="filterMaintenanceHistory()">
+                </div>
+            </div>
+    
+            <table id="maintenance-history-table">
+                <thead>
+                    <tr>
+                        <th>תאריך</th>
+                        <th>כלי עבודה</th>
+                        <th>סוג טיפול</th>
+                        <th>מבצע</th>
+                        <th>עלות</th>
+                        <th>הערות</th>
+                    </tr>
+                </thead>
+                <tbody id="maintenance-history-body">
+                    <!-- רשומות תחזוקה יוצגו כאן -->
+                </tbody>
+            </table>
+        </div>
+    
+        <!-- תוכן לשונית דוחות -->
+        <div id="reports" class="tab-content">
+            <h2>דוחות</h2>
+    
+            <div class="form-group">
+                <label for="report-type">סוג דוח:</label>
+                <select id="report-type">
+                    <option value="monthly-income">הכנסה חודשית</option>
+                    <option value="client-summary">סיכום לקוחות</option>
+                    <option value="tools-usage">שימוש בכלי עבודה</option>
+                    <option value="detailed-all-jobs">דוח מפורט לכל העבודות</option>
+                    <option value="detailed-client-report">דוח מפורט ללקוח</option>
+                    <option value="operator-history">היסטוריית מפעיל</option>
+                    <option value="location-history">היסטוריית מקום עבודה</option>
+                </select>
+            </div>
+    
+            <div class="form-group">
+                <label for="report-date-from">מתאריך:</label>
+                <input type="date" id="report-date-from">
+            </div>
+    
+            <div class="form-group">
+                <label for="report-date-to">עד תאריך:</label>
+                <input type="date" id="report-date-to">
+            </div>
+    
+            <div class="form-group">
+                <label for="report-client">לקוח (אופציונלי):</label>
+                <select id="report-client" class="client-dropdown">
+                    <option value="">כל הלקוחות</option>
+                </select>
+            </div>
+    
+            <div class="form-group">
+                <label for="report-operator">מפעיל (אופציונלי):</label>
+                <select id="report-operator" class="operator-dropdown">
+                    <option value="">כל המפעילים</option>
+                </select>
+            </div>
+    
+            <div class="form-group">
+                <label for="report-location">מקום עבודה (אופציונלי):</label>
+                <select id="report-location" class="location-dropdown">
+                    <option value="">כל מקומות העבודה</option>
+                </select>
+            </div>
+    
+            <button onclick="generateReport()">הפק דוח</button>
+    
+            <!-- דוח עם לוגו מוטמע -->
+            <div id="report-result" class="print-section">
+                <div class="print-header">
+                    <div class="print-logo">
+                        <img src="images/logos/logo-default.png" alt="לוגו החברה" class="print-logo-img">
+                    </div>
+                    <h2>דוח <span id="report-title"></span></h2>
+                </div>
+                
+                <div id="report-content">
+                    <!-- תוכן הדוח יוצג כאן -->
+                </div>
+                
+                <div class="print-footer">
+                    <p>אילן אליהו בע"מ | טלפון: 050-5258675-0522406516 | דוא"ל: shal1962@gmail.com</p>
+                </div>
+                
+                <div class="no-print" style="margin-top: 20px; text-align: center;">
+                    <button onclick="preparePrintDocument('report')">הדפס דוח</button>
+                    <button onclick="exportReportToPDF()">ייצא ל-PDF</button>
+                    <button onclick="exportReportToExcel()">ייצא לאקסל</button>
+                    <button onclick="clearReport()">נקה דוח</button>
+                </div>
+            </div>
+        </div>
+    
+        <!-- תוכן לשונית לוח שנה -->
+        <div id="calendar" class="tab-content">
+            <h2>לוח שנה - תכנון עבודות</h2>
+    
+            <div class="calendar-toolbar">
+                <div class="calendar-controls">
+                    <button id="prev-month" class="calendar-nav-btn">חודש קודם</button>
+                    <span id="current-month-display">חודש נוכחי</span>
+                    <button id="next-month" class="calendar-nav-btn">חודש הבא</button>
+                    <button id="today-btn" class="calendar-nav-btn">היום</button>
+                </div>
+    
+                <div class="calendar-view-options">
+                    <select id="calendar-view-select">
+                        <option value="dayGridMonth">תצוגת חודש</option>
+                        <option value="timeGridWeek">תצוגת שבוע</option>
+                        <option value="timeGridDay">תצוגת יום</option>
+                        <option value="listMonth">תצוגת רשימה</option>
+                    </select>
+                </div>
+            </div>
+    
+            <div class="calendar-layout">
+                <div class="calendar-sidebar">
+                    <div class="sidebar-section">
+                        <h3>פעולות יצירה</h3>
+                        <button id="create-work-btn" class="calendar-action-btn">יצירת עבודה חדשה</button>
+                    </div>
+    
+                    <div class="sidebar-section">
+                        <h3>עבודות לתכנון</h3>
+                        <div id="unscheduled-work" class="dragable-work-items">
+                            <!-- רשימת עבודות שעדיין לא תוכננו -->
+                            <div class="no-items-message">טוען עבודות...</div>
+                        </div>
+                    </div>
+    
+                    <div class="sidebar-section">
+                        <h3>סינון כלי עבודה</h3>
+                        <select id="filter-tools" class="tool-filter-all">
+                            <option value="all">כל הכלים</option>
+                        </select>
+                    </div>
+    
+                    <div class="sidebar-section">
+                        <h3>סינון לקוחות</h3>
+                        <select id="filter-clients" class="client-dropdown">
+                            <option value="all">כל הלקוחות</option>
+                        </select>
+                    </div>
+                </div>
+    
+                <div id="work-calendar" class="calendar-container">
+                    <!-- לוח השנה יוצג כאן -->
+                </div>
+            </div>
+        </div>
+        <!-- מודאלים -->
+        <!-- Client Details Modal -->
+        <div id="client-details" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeClientDetails()">&times;</span>
+                <div id="client-details-content">
+                    <!-- פרטי הלקוח יוצגו כאן -->
+                </div>
+            </div>
+        </div>
+    
+        <!-- Tool Details Modal -->
+        <div id="tool-details" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeToolDetails()">&times;</span>
+                <div id="tool-details-content">
+                    <!-- פרטי כלי העבודה יוצגו כאן -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Operator Details Modal -->
+        <div id="operator-details" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeOperatorDetails()">&times;</span>
+                <div id="operator-details-content">
+                    <!-- פרטי המפעיל יוצגו כאן -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Details Modal -->
+        <div id="location-details" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeLocationDetails()">&times;</span>
+                <div id="location-details-content">
+                    <!-- פרטי מקום העבודה יוצגו כאן -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Work Image Modal -->
+        <div id="work-image-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeWorkImageModal()">&times;</span>
+                <div id="work-image-content">
+                    <!-- תוכן התמונה יוצג כאן -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Details Modal -->
+        <div id="event-details-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeEventModal()">&times;</span>
+                <div id="event-details-content">
+                    <!-- פרטי האירוע יוצגו כאן -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Event Modal -->
+        <div id="create-event-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeCreateEventModal()">&times;</span>
+                <h3>יצירת עבודה חדשה</h3>
+                
+                <div class="form-group">
+                    <label for="event-date">תאריך:</label>
+                    <input type="date" id="event-date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="event-client">לקוח:</label>
+                    <select id="event-client" class="client-dropdown" required>
+                        <option value="">בחר לקוח</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="event-location">מקום העבודה:</label>
+                    <select id="event-location" class="location-dropdown">
+                        <option value="">בחר מקום עבודה</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="event-tools">כלי עבודה:</label>
+                    <select id="event-tools" class="tool-dropdown">
+                        <option value="">בחר כלי עבודה</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="event-operator">מפעיל:</label>
+                    <select id="event-operator" class="operator-dropdown">
+                        <option value="">בחר מפעיל</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="event-daily-price">מחיר ליום עבודה:</label>
+                    <input type="number" id="event-daily-price" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="event-transportation">הובלה:</label>
+                    <select id="event-transportation">
+                        <option value="כן">כן</option>
+                        <option value="לא">לא</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="event-transportation-cost">מחיר הובלה:</label>
+                    <input type="number" id="event-transportation-cost" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="event-notes">הערות:</label>
+                    <textarea id="event-notes"></textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button id="save-event-btn" onclick="saveCalendarEvent()">שמור עבודה</button>
+                    <button onclick="closeCreateEventModal()">בטל</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quote Print Preview - עם לוגו -->
+        <div id="quote-preview" style="display: none;"
+        <!-- Quote Print Preview - עם לוגו -->
+        <div id="quote-preview" style="display: none;" class="print-section">
+            <div class="print-header">
+                <div class="print-logo">
+                    <img src="images/logos/logo-default.png" alt="לוגו החברה" class="print-logo-img">
+                </div>
+                <h2>הצעת מחיר</h2>
+                <p id="preview-id"></p>
+            </div>
+
+            <div class="print-content">
+                <div class="print-label">תאריך:</div>
+                <div id="preview-date"></div>
+
+                <div class="print-label">לקוח:</div>
+                <div id="preview-client"></div>
+
+                <div class="print-label">כלי עבודה:</div>
+                <div id="preview-tools"></div>
+
+                <div class="print-label">מחיר ליום:</div>
+                <div id="preview-daily-price"></div>
+
+                <div class="print-label">מקום העבודה:</div>
+                <div id="preview-location"></div>
+
+                <div class="print-label">מפעיל:</div>
+                <div id="preview-operator"></div>
+
+                <div class="print-label">הובלה:</div>
+                <div id="preview-transportation"></div>
+
+                <div class="print-label">מחיר הובלה:</div>
+                <div id="preview-transportation-cost"></div>
+
+                <div class="print-label">הערות:</div>
+                <div id="preview-notes"></div>
+
+                <div class="print-label">סה"כ מחיר (ללא מע"מ):</div>
+                <div id="preview-total"></div>
+
+                <div class="print-label">מע"מ (18%):</div>
+                <div id="preview-vat"></div>
+
+                <div class="print-label">סה"כ כולל מע"מ:</div>
+                <div id="preview-total-with-vat"></div>
+            </div>
+
+            <div class="print-footer">
+                <p>שם החברה בע"מ | טלפון: xxx-xxxxxxx | דוא"ל: example@example.com</p>
+            </div>
+
+            <div class="no-print" style="margin-top: 20px; text-align: center;">
+                <button onclick="preparePrintDocument('quote', currentQuoteId)">הדפס</button>
+                <button onclick="closePreview()">סגור</button>
+            </div>
+        </div>
+    </div>
+
+ <!-- קבצי JavaScript מקוריים -->
+<script src="js/app.js"></script>
+<script src="js/worklog.js"></script>
+<script src="js/quotes.js"></script>
+<script src="js/clients.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/operators.js"></script>
+<script src="js/locations.js"></script>
+<script src="js/maintenance.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/debug/debug-reports.js"></script>
+<script src="js/data-export-import.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/debug/debug-calendar.js"></script> 
+<script src="js/reminders.js"></script>
+<script src="js/csv-import.js"></script>
+<script src="js/export-tools.js"></script>
+<script src="js/delivery-notes.js"></script>
+<img src="images/logos/logo-default.png" alt="לוגו החברה" class="print-logo-img">
+<script src="js/form-enhancements.js"></script>
+<script src="js/freetext-setup.js"></script>
+<script src="js/mobile-adjustments.js"></script>
+
+<!-- קובץ JavaScript חדש לניהול לוגואים -->
+<script src="js/logo-handler.js"></script>
+</body>
+</html>
